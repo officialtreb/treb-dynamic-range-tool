@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Treb Dynamic Range Tool</title>
+<style>
+*{box-sizing:border-box}
+body{background:#0e0e0e;color:#eaeaea;font-family:Arial,sans-serif}
+.container{width:460px;margin:30px auto;padding:24px;background:#1a1a1a;border-radius:12px}
+h1,h2,h3{text-align:center;margin:10px 0}
+.section{margin-top:24px;padding-top:16px;border-top:1px solid #333}
+.field{display:flex;flex-direction:column;margin-top:12px}
+label{font-size:13px;margin-bottom:4px}
+input{width:100%;padding:10px;border-radius:6px;border:none;background:#f2f2f2;color:#000}
+button{margin-top:28px;width:100%;padding:14px;background:#00bcd4;border:none;font-weight:bold;font-size:15px;cursor:pointer;border-radius:8px}
+.result{margin-top:28px;font-size:14px;line-height:1.7}
+.warn{color:#ff5c5c;font-weight:bold}
+.ok{color:#7CFC98;font-weight:bold}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>Treb Dynamic Range Tool</h1>
+
+<div class="section">
+<h2>Microphone</h2>
+<div class="field"><label>SPL Max (dB SPL)</label><input id="splMax" type="number" value="160"></div>
+<div class="field"><label>SPL Min / Noise Floor (dB SPL)</label><input id="splMin" type="number" value="33"></div>
+<div class="field"><label>Sensitivity (mV @ 94 dB SPL)</label><input id="sens" type="number" value="1.12"></div>
+</div>
+
+<div class="section">
+<h2>Preamp</h2>
+<div class="field"><label>Gain From (dB)</label><input id="gainFrom" type="number" value="10"></div>
+<div class="field"><label>Gain Up To (dB)</label><input id="gainTo" type="number" value="63"></div>
+<div class="field"><label>Total Gain Range (optional)</label><input id="gainRange" type="number"></div>
+<div class="field"><label>Dynamic Range (dB)</label><input id="preDR" type="number" value="130"></div>
+<div class="field"><label>Max Input Level (dBu) @ Min Gain</label><input id="preInMax" type="number" value="17"></div>
+
+<h3>Output Knob</h3>
+<div class="field"><label>Min Output (dB)</label><input id="outMin" type="number" value="-26"></div>
+<div class="field"><label>Max Output (dB)</label><input id="outMax" type="number" value="6"></div>
+<div class="field"><label>Max Output Level (dBu) @ Max Output</label><input id="preOutMax" type="number" value="34"></div>
+</div>
+
+<div class="section">
+<h2>AD / DA Converter</h2>
+<div class="field"><label>Max Input Level (dBu)</label><input id="adMax" type="number" value="20"></div>
+<div class="field"><label>Dynamic Range (dB)</label><input id="adDR" type="number" value="122"></div>
+</div>
+
+<button id="calcBtn" type="button">Calculate</button>
+
+<div class="result" id="out">Waiting for calculation…</div>
+</div>
+
+<script>
+function voltsToDBu(v){return 20*Math.log10(v/0.775);}
+
+window.addEventListener("load",function(){
+
+  const btn = document.getElementById("calcBtn");
+
+  btn.addEventListener("click",function(){
+
+    const splMax = Number(document.getElementById("splMax").value);
+    const splMin = Number(document.getElementById("splMin").value);
+    const sens   = Number(document.getElementById("sens").value);
+
+    let gainFrom = parseFloat(document.getElementById("gainFrom").value);
+    let gainTo   = parseFloat(document.getElementById("gainTo").value);
+    let gainRange= parseFloat(document.getElementById("gainRange").value);
+
+    const preDR    = Number(document.getElementById("preDR").value);
+    const preInMax = Number(document.getElementById("preInMax").value);
+
+    const outMin   = Number(document.getElementById("outMin").value);
+    const outMax   = Number(document.getElementById("outMax").value);
+    const preOutMax= Number(document.getElementById("preOutMax").value);
+
+    const adMax = Number(document.getElementById("adMax").value);
+    const adDR  = Number(document.getElementById("adDR").value);
+
+    // Gain inference
+    if(isNaN(gainFrom)&&isNaN(gainTo)&&!isNaN(gainRange)){gainFrom=0;gainTo=gainRange;}
+    if(!isNaN(gainRange)&&!isNaN(gainTo)&&isNaN(gainFrom))gainFrom=gainTo-gainRange;
+    if(!isNaN(gainRange)&&!isNaN(gainFrom)&&isNaN(gainTo))gainTo=gainFrom+gainRange;
+
+    // Mic
+    const micDR = splMax - splMin;
+    const micVmin = sens * Math.pow(10,(splMin-94)/20);
+    const micVmax = sens * Math.pow(10,(splMax-94)/20);
+    const micMin_dBu = voltsToDBu(micVmin/1000);
+    const micMax_dBu = voltsToDBu(micVmax/1000);
+
+    // Preamp
+    const preMinInputMinGain = preInMax - preDR;
+    const preMinInputMaxGain = preMinInputMinGain - (gainTo - gainFrom);
+
+    // Gain recommendations (correct)
+    const gainMatchMaxSPL = preInMax - micMax_dBu;
+    const gainMatchMinSPL = gainFrom + (preMinInputMinGain - micMin_dBu);
+
+    const warnMax = (gainMatchMaxSPL < gainFrom || gainMatchMaxSPL > gainTo);
+    const warnMin = (gainMatchMinSPL < gainFrom || gainMatchMinSPL > gainTo);
+
+    // Output knob
+    const outputAttenuation = adMax - preOutMax;
+    const outputKnobTarget = outMax + outputAttenuation;
+    const warnOut = (outputKnobTarget < outMin || outputKnobTarget > outMax);
+
+    const adMin_dBu = adMax - adDR;
+
+    document.getElementById("out").innerHTML = `
+<b>Microphone</b><br>
+Dynamic Range: ${micDR.toFixed(1)} dB<br>
+Min Output: ${micMin_dBu.toFixed(2)} dBu<br>
+Max Output: ${micMax_dBu.toFixed(2)} dBu<br><br>
+
+<b>Preamp Input</b><br>
+Available Gain: ${gainFrom.toFixed(1)} → ${gainTo.toFixed(1)} dB<br>
+Min Theoretical Input @ Min Gain: ${preMinInputMinGain.toFixed(1)} dBu<br>
+Min Theoretical Input @ Max Gain: ${preMinInputMaxGain.toFixed(1)} dBu<br><br>
+
+<b>Gain Recommendations</b><br>
+Recommended Gain: ${gainMatchMaxSPL.toFixed(1)} dB – Match Max SPL ${warnMax?'<span class="warn">(values incompatible)</span>':'<span class="ok">(ok)</span>'}<br>
+Recommended Gain: ${gainMatchMinSPL.toFixed(1)} dB – Match Min SPL ${warnMin?'<span class="warn">(values incompatible)</span>':'<span class="ok">(ok)</span>'}<br><br>
+
+<b>Output Knob</b><br>
+Recommended Output Knob: ${outputKnobTarget.toFixed(1)} dB ${warnOut?'<span class="warn">(values incompatible)</span>':'<span class="ok">(ok)</span>'}<br><br>
+
+<b>AD Converter</b><br>
+Min Input Level: ${adMin_dBu.toFixed(1)} dBu<br>
+Max Input Level: ${adMax.toFixed(1)} dBu
+`;
+  });
+
+});
+</script>
+</body>
+</html>
