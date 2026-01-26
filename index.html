@@ -6,84 +6,46 @@
 <title>Treb Dynamic Range Tool</title>
 <style>
 *{box-sizing:border-box}
-body{
-  margin:0;
-  background:#0e0e0e;
-  color:#eaeaea;
-  font-family:Arial,sans-serif;
-}
-.wrapper{
-  padding:16px;
-}
-.container{
-  max-width:480px;
-  width:100%;
-  margin:0 auto;
-  padding:20px;
-  background:#1a1a1a;
-  border-radius:14px;
-}
-h1,h2,h3{
-  text-align:center;
-  margin:12px 0;
-}
-.section{
-  margin-top:22px;
-  padding-top:14px;
-  border-top:1px solid #333;
-}
-.field{
-  display:flex;
-  flex-direction:column;
-  margin-top:12px;
-}
-label{
-  font-size:13px;
-  margin-bottom:6px;
-}
-input{
-  width:100%;
-  padding:12px;
-  border-radius:8px;
-  border:none;
-  background:#f2f2f2;
-  color:#000;
-  font-size:16px;
-}
-button{
-  margin-top:26px;
-  width:100%;
-  padding:16px;
-  background:#00bcd4;
-  border:none;
-  font-weight:bold;
-  font-size:16px;
-  cursor:pointer;
-  border-radius:10px;
-}
-.result{
-  margin-top:26px;
-  font-size:14px;
-  line-height:1.7;
-  word-wrap:break-word;
-}
-.warn{color:#ff5c5c;font-weight:bold}
-.ok{color:#7CFC98;font-weight:bold}
+body{margin:0;background:#0e0e0e;color:#eaeaea;font-family:Arial,sans-serif}
+.wrapper{padding:16px}
+.container{max-width:520px;margin:0 auto;padding:20px;background:#1a1a1a;border-radius:14px}
+h1,h2,h3{margin:10px 0}
+h1{text-align:center}
+.version{text-align:center;font-size:12px;color:#aaa}
 
-@media (max-width:480px){
-  .wrapper{padding:8px}
-  .container{padding:16px;border-radius:10px}
-  h1{font-size:20px}
-  h2{font-size:18px}
-  h3{font-size:16px}
-  label{font-size:12px}
-  .result{font-size:13px}
+.section{margin-top:22px;padding-top:14px;border-top:1px solid #333}
+.field{display:flex;flex-direction:column;margin-top:12px}
+label{font-size:13px;margin-bottom:6px}
+input{padding:12px;border-radius:8px;border:none;font-size:16px}
+
+button.calc{
+  margin-top:24px;width:100%;padding:16px;border:none;border-radius:10px;
+  font-size:16px;font-weight:bold;cursor:pointer;background:#00bcd4
 }
-@media (max-width:360px){
-  h1{font-size:18px}
-  h2{font-size:16px}
-  button{padding:14px;font-size:15px}
+
+.result{margin-top:24px;font-size:14px;line-height:1.7}
+
+/* Toggle */
+.toggle{position:relative;display:inline-block;width:34px;height:18px;vertical-align:middle;margin-left:6px}
+.toggle input{display:none}
+.slider{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background:#666;border-radius:18px;transition:.2s
 }
+.slider:before{
+  content:"";position:absolute;height:14px;width:14px;
+  left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s
+}
+.toggle input:checked + .slider{background:#1bbf4a}
+.toggle input:checked + .slider:before{transform:translateX(16px)}
+.toggle.disabled .slider{background:#666}
+.toggle.disabled .slider:before{background:#fff}
+
+.header-line{display:flex;justify-content:space-between;align-items:center;font-weight:bold;margin-top:14px}
+.pad-label{font-size:12px;color:#ccc}
+.pad-note{color:#ffd54a;font-size:12px}
+
+@media(max-width:480px){.wrapper{padding:8px}}
 </style>
 </head>
 <body>
@@ -91,113 +53,136 @@ button{
 <div class="wrapper">
 <div class="container">
 <h1>Treb Dynamic Range Tool</h1>
+<div class="version">Beta v0.5.9</div>
 
 <div class="section">
 <h2>Microphone</h2>
-<div class="field"><label>SPL Max (dB SPL)</label><input id="splMax" type="number" value="160"></div>
-<div class="field"><label>SPL Min / Noise Floor (dB SPL)</label><input id="splMin" type="number" value="33"></div>
+<div class="field"><label>Reference / Model</label><input id="micRef" placeholder="Neumann U87 i"></div>
+<div class="field"><label>SPL Max (dB SPL)</label><input id="splMax" type="number" value="122"></div>
+<div class="field"><label>SPL Min (dB SPL)</label><input id="splMin" type="number" value="5"></div>
 <div class="field"><label>Sensitivity (mV @ 94 dB SPL)</label><input id="sens" type="number" value="1.12"></div>
+<div class="field"><label>Mic Pad (dB) – optional</label><input id="micPad" type="text" value=""></div>
 </div>
 
 <div class="section">
 <h2>Preamp</h2>
-<div class="field"><label>Gain From (dB)</label><input id="gainFrom" type="number" value="10"></div>
-<div class="field"><label>Gain Up To (dB)</label><input id="gainTo" type="number" value="63"></div>
-<div class="field"><label>Total Gain Range (optional)</label><input id="gainRange" type="number"></div>
+<div class="field"><label>Reference / Model</label><input id="preRef" placeholder="Focusrite ISA One"></div>
 <div class="field"><label>Dynamic Range (dB)</label><input id="preDR" type="number" value="130"></div>
 <div class="field"><label>Max Input Level (dBu) @ Min Gain</label><input id="preInMax" type="number" value="17"></div>
+<div class="field"><label>Preamp Pad (dB) – optional</label><input id="prePad" type="text" value=""></div>
+
+<h3>Gain Knob</h3>
+<div class="field"><label>Gain From (dB)</label><input id="gainFrom" type="number" value="0"></div>
+<div class="field"><label>Gain Up To (dB)</label><input id="gainTo" type="number" value="30"></div>
 
 <h3>Output Knob</h3>
 <div class="field"><label>Min Output (dB)</label><input id="outMin" type="number" value="-26"></div>
 <div class="field"><label>Max Output (dB)</label><input id="outMax" type="number" value="6"></div>
-<div class="field"><label>Max Output Level (dBu) @ Max Output</label><input id="preOutMax" type="number" value="34"></div>
+<div class="field"><label>Max Output Level (dBu)</label><input id="preOutMax" type="number" value="34"></div>
 </div>
 
 <div class="section">
 <h2>AD / DA Converter</h2>
+<div class="field"><label>Reference / Model</label><input id="adRef" placeholder="Antelope Zen Go"></div>
 <div class="field"><label>Max Input Level (dBu)</label><input id="adMax" type="number" value="20"></div>
 <div class="field"><label>Dynamic Range (dB)</label><input id="adDR" type="number" value="122"></div>
 </div>
 
-<button id="calcBtn" type="button">Calculate</button>
-
-<div class="result" id="out">Waiting for calculation…</div>
+<button class="calc" id="calcBtn">Calculate</button>
+<div class="result" id="out"></div>
 </div>
 </div>
 
 <script>
 function voltsToDBu(v){return 20*Math.log10(v/0.775);}
+function parsePad(val){ if(!val) return 0; return parseFloat(val); }
+function rawPadText(val){ return val.toString().trim(); }
+function absPad(val){ return Math.abs(parseFloat(val)); }
 
-window.addEventListener("load",function(){
-  document.getElementById("calcBtn").addEventListener("click",function(){
+let micPadOn=false, prePadOn=false;
 
-    const splMax = Number(document.getElementById("splMax").value);
-    const splMin = Number(document.getElementById("splMin").value);
-    const sens   = Number(document.getElementById("sens").value);
+function calculate(){
+  const micPadRaw = micPad.value.trim();
+  const prePadRaw = prePad.value.trim();
 
-    let gainFrom = parseFloat(document.getElementById("gainFrom").value);
-    let gainTo   = parseFloat(document.getElementById("gainTo").value);
-    let gainRange= parseFloat(document.getElementById("gainRange").value);
+  const micPadVal=parsePad(micPadRaw);
+  const prePadVal=parsePad(prePadRaw);
 
-    const preDR    = Number(document.getElementById("preDR").value);
-    const preInMax = Number(document.getElementById("preInMax").value);
+  const micHasPad = micPadVal!==0;
+  const preHasPad = prePadVal!==0;
 
-    const outMin   = Number(document.getElementById("outMin").value);
-    const outMax   = Number(document.getElementById("outMax").value);
-    const preOutMax= Number(document.getElementById("preOutMax").value);
+  if(!micHasPad) micPadOn=false;
+  if(!preHasPad) prePadOn=false;
 
-    const adMax = Number(document.getElementById("adMax").value);
-    const adDR  = Number(document.getElementById("adDR").value);
+  const micPadActive = micHasPad && micPadOn;
+  const prePadActive = preHasPad && prePadOn;
 
-    if(isNaN(gainFrom)&&isNaN(gainTo)&&!isNaN(gainRange)){gainFrom=0;gainTo=gainRange;}
-    if(!isNaN(gainRange)&&!isNaN(gainTo)&&isNaN(gainFrom))gainFrom=gainTo-gainRange;
-    if(!isNaN(gainRange)&&!isNaN(gainFrom)&&isNaN(gainTo))gainTo=gainFrom+gainRange;
+  const splMaxEff=Number(splMax.value)+(micPadActive?micPadVal:0);
+  const splMinEff=Number(splMin.value)+(micPadActive?micPadVal:0);
+  const sensEff=Number(sens.value)*Math.pow(10,-(micPadActive?micPadVal:0)/20);
 
-    const micDR = splMax - splMin;
-    const micVmin = sens * Math.pow(10,(splMin-94)/20);
-    const micVmax = sens * Math.pow(10,(splMax-94)/20);
-    const micMin_dBu = voltsToDBu(micVmin/1000);
-    const micMax_dBu = voltsToDBu(micVmax/1000);
+  const micVmin=sensEff*Math.pow(10,(splMinEff-94)/20);
+  const micVmax=sensEff*Math.pow(10,(splMaxEff-94)/20);
+  const micMin_dBu=voltsToDBu(micVmin/1000);
+  const micMax_dBu=voltsToDBu(micVmax/1000);
 
-    const preMinInputMinGain = preInMax - preDR;
-    const preMinInputMaxGain = preMinInputMinGain - (gainTo - gainFrom);
+  const preInMaxEff=Number(preInMax.value)-(prePadActive?prePadVal:0);
+  const preMinInput=preInMaxEff-Number(preDR.value);
 
-    const gainMatchMaxSPL = preInMax - micMax_dBu;
-    const gainMatchMinSPL = gainFrom + (preMinInputMinGain - micMin_dBu);
+  const gainMax=preInMaxEff-micMax_dBu;
+  const gainMin=Number(gainFrom.value)+(preMinInput-micMin_dBu);
 
-    const warnMax = (gainMatchMaxSPL < gainFrom || gainMatchMaxSPL > gainTo);
-    const warnMin = (gainMatchMinSPL < gainFrom || gainMatchMinSPL > gainTo);
+  const outputKnob=Number(outMax.value)+(Number(adMax.value)-Number(preOutMax.value));
 
-    const outputAttenuation = adMax - preOutMax;
-    const outputKnobTarget = outMax + outputAttenuation;
-    const warnOut = (outputKnobTarget < outMin || outputKnobTarget > outMax);
-
-    const adMin_dBu = adMax - adDR;
-
-    document.getElementById("out").innerHTML = `
-<b>Microphone</b><br>
-Dynamic Range: ${micDR.toFixed(1)} dB<br>
+  document.getElementById("out").innerHTML=`
+<div class="header-line">
+<span>Microphone — ${micRef.value||"—"}</span>
+<span class="pad-label">
+Pad ${micHasPad?rawPadText(micPadRaw)+' dB':'(n/a)'}
+<label class="toggle ${!micHasPad?'disabled':''}">
+<input type="checkbox" ${micPadActive?'checked':''} ${!micHasPad?'disabled':''}
+ onchange="micPadOn=this.checked;calculate();">
+<span class="slider"></span>
+</label>
+</span>
+</div>
+Effective SPL Range: ${splMinEff.toFixed(1)} → ${splMaxEff.toFixed(1)} dB SPL<br>
+Dynamic Range: ${(splMaxEff-splMinEff).toFixed(1)} dB<br>
 Min Output: ${micMin_dBu.toFixed(2)} dBu<br>
 Max Output: ${micMax_dBu.toFixed(2)} dBu<br><br>
 
-<b>Preamp Input</b><br>
-Available Gain: ${gainFrom.toFixed(1)} → ${gainTo.toFixed(1)} dB<br>
-Min Theoretical Input @ Min Gain: ${preMinInputMinGain.toFixed(1)} dBu<br>
-Min Theoretical Input @ Max Gain: ${preMinInputMaxGain.toFixed(1)} dBu<br><br>
+<div class="header-line">
+<span>Preamp — ${preRef.value||"—"}</span>
+<span class="pad-label">
+Pad ${preHasPad?rawPadText(prePadRaw)+' dB':'(n/a)'}
+<label class="toggle ${!preHasPad?'disabled':''}">
+<input type="checkbox" ${prePadActive?'checked':''} ${!preHasPad?'disabled':''}
+ onchange="prePadOn=this.checked;calculate();">
+<span class="slider"></span>
+</label>
+</span>
+</div>
+Available Gain: ${gainFrom.value} → ${gainTo.value} dB ${prePadActive?'<span class="pad-note">+'+absPad(prePadVal)+' dB</span>':''}<br>
+Min Theoretical Input @ Min Gain: ${(preMinInput).toFixed(1)} dBu<br>
+Min Theoretical Input @ Max Gain: ${(preMinInput-(gainTo.value-gainFrom.value)).toFixed(1)} dBu<br><br>
 
 <b>Gain Recommendations</b><br>
-Recommended Gain: ${gainMatchMaxSPL.toFixed(1)} dB – Match Max SPL ${warnMax?'<span class="warn">(values incompatible)</span>':'<span class="ok">(ok)</span>'}<br>
-Recommended Gain: ${gainMatchMinSPL.toFixed(1)} dB – Match Min SPL ${warnMin?'<span class="warn">(values incompatible)</span>':'<span class="ok">(ok)</span>'}<br><br>
+Recommended Gain: ${gainMax.toFixed(1)} dB – Match Max SPL<br>
+Recommended Gain: ${gainMin.toFixed(1)} dB – Match Min SPL<br><br>
 
 <b>Output Knob</b><br>
-Recommended Output Knob: ${outputKnobTarget.toFixed(1)} dB ${warnOut?'<span class="warn">(values incompatible)</span>':'<span class="ok">(ok)</span>'}<br><br>
+Recommended Output Knob: ${outputKnob.toFixed(1)} dB<br><br>
 
-<b>AD Converter</b><br>
-Min Input Level: ${adMin_dBu.toFixed(1)} dBu<br>
-Max Input Level: ${adMax.toFixed(1)} dBu
+<b>AD Converter — ${adRef.value||"—"}</b><br>
+Min Input Level: ${(Number(adMax.value)-Number(adDR.value)).toFixed(1)} dBu<br>
+Max Input Level: ${Number(adMax.value).toFixed(1)} dBu
 `;
-  });
+}
+
+window.addEventListener("load",()=>{
+  document.getElementById("calcBtn").addEventListener("click",calculate);
 });
 </script>
+
 </body>
 </html>
