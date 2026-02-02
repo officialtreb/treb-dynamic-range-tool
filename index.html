@@ -53,26 +53,26 @@ button.calc{
 <div class="wrapper">
 <div class="container">
 <h1>Treb Dynamic Range Tool</h1>
-<div class="version">Beta v0.5.9</div>
+<div class="version">Beta v0.5.10</div>
 
 <div class="section">
 <h2>Microphone</h2>
 <div class="field"><label>Reference / Model</label><input id="micRef" placeholder="Neumann U87 i"></div>
 <div class="field"><label>SPL Max (dB SPL)</label><input id="splMax" type="number" value="122"></div>
 <div class="field"><label>SPL Min (dB SPL)</label><input id="splMin" type="number" value="5"></div>
-<div class="field"><label>Sensitivity (mV @ 94 dB SPL)</label><input id="sens" type="number" value="1.12"></div>
+<div class="field"><label>Sensitivity (mV @ 94 dB SPL)</label><input id="sens" type="number" value="8"></div>
 <div class="field"><label>Mic Pad (dB) – optional</label><input id="micPad" type="text" value=""></div>
 </div>
 
 <div class="section">
 <h2>Preamp</h2>
-<div class="field"><label>Reference / Model</label><input id="preRef" placeholder="Focusrite ISA One"></div>
+<div class="field"><label>Reference / Model</label><input id="preRef" placeholder="SPL Gain Station 1"></div>
 <div class="field"><label>Dynamic Range (dB)</label><input id="preDR" type="number" value="130"></div>
 <div class="field"><label>Max Input Level (dBu) @ Min Gain</label><input id="preInMax" type="number" value="17"></div>
 <div class="field"><label>Preamp Pad (dB) – optional</label><input id="prePad" type="text" value=""></div>
 
 <h3>Gain Knob</h3>
-<div class="field"><label>Gain From (dB)</label><input id="gainFrom" type="number" value="0"></div>
+<div class="field"><label>Gain From (dB)</label><input id="gainFrom" type="number" value="10"></div>
 <div class="field"><label>Gain Up To (dB)</label><input id="gainTo" type="number" value="30"></div>
 
 <h3>Output Knob</h3>
@@ -129,7 +129,7 @@ function calculate(){
   const preInMaxEff=Number(preInMax.value)-(prePadActive?prePadVal:0);
   const preMinInput=preInMaxEff-Number(preDR.value);
 
-  const gainMax=preInMaxEff-micMax_dBu;
+  const gainMax=Number(gainFrom.value)+(preInMaxEff-micMax_dBu);
   const gainMin=Number(gainFrom.value)+(preMinInput-micMin_dBu);
 
   const outputKnob=Number(outMax.value)+(Number(adMax.value)-Number(preOutMax.value));
