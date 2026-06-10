@@ -772,8 +772,8 @@ function calcAll(gainDb, outDb) {
   const adInputDBFS = outSignalDBu - p.adMax;
   const headroom    = p.adMax - outSignalDBu;
 
-  // Match detection — tolerance ±0.1 dB
-  const TOL = 0.1;
+  // Match detection — tolerance ±0.3 dB
+  const TOL = 0.3;
   const outMatchesAdMax    = Math.abs(outSignalDBu - p.adMax) <= TOL;
   const preMinMatchesAdMin = Math.abs(preMinOut - adMinDBu) <= TOL;
 
