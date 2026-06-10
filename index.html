@@ -255,7 +255,6 @@ canvas.knob-canvas { display: none; }
 
   /* Knobs: slightly smaller */
   .fknob-wrap { width: 86px; height: 86px; }
-  .fknob-sprite { height: 86px; }
   .knobs-row { gap: 24px; }
   .knob-readout { font-size: 12px; min-width: 76px; }
 
@@ -286,7 +285,6 @@ canvas.knob-canvas { display: none; }
 ════════════════════════════════════════════════ */
 @media (max-width: 380px) {
   .fknob-wrap { width: 76px; height: 76px; }
-  .fknob-sprite { height: 76px; }
   .knobs-row { gap: 16px; }
   .header h1 { font-size: 14px; letter-spacing: 2px; }
   .dr-bars-row { gap: 18px; }
@@ -643,8 +641,13 @@ function makeKnob(wrapperId, opts) {
 
   function draw() {
     const frame = valToFrame(_value);
-    // Shift the sprite div left by frame × 100px to show correct frame through the 100px window
-    sprite.style.transform = `translateX(-${frame * KNOB_DISPLAY}px)`;
+    // Read actual rendered size of the wrap (respects CSS media queries)
+    const displaySize = wrap.offsetWidth || KNOB_DISPLAY;
+    // Scale the sprite image to match the current display size
+    sprite.style.height  = displaySize + 'px';
+    sprite.style.width   = 'auto';
+    // Shift left by frame × displaySize to show correct frame
+    sprite.style.transform = `translateX(-${frame * displaySize}px)`;
   }
 
   function setValue(v) {
@@ -1372,6 +1375,13 @@ document.addEventListener("DOMContentLoaded", () => {
   syncPreDR();
 
   update();
+
+  // Redraw knobs on resize (orientation change, window resize)
+  // so the sprite scales to the new CSS size
+  window.addEventListener('resize', () => {
+    gainKnob.setValue(gainKnob.getValue());
+    outKnob.setValue(outKnob.getValue());
+  });
 
   // ── MOBILE ACCORDION ──
   // Wrap each param-section's rows in a .param-section-body div
