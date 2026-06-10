@@ -1,188 +1,1306 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Treb Dynamic Range Tool</title>
+<title>TrebGainStation</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#0e0e0e;color:#eaeaea;font-family:Arial,sans-serif}
-.wrapper{padding:16px}
-.container{max-width:520px;margin:0 auto;padding:20px;background:#1a1a1a;border-radius:14px}
-h1,h2,h3{margin:10px 0}
-h1{text-align:center}
-.version{text-align:center;font-size:12px;color:#aaa}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-.section{margin-top:22px;padding-top:14px;border-top:1px solid #333}
-.field{display:flex;flex-direction:column;margin-top:12px}
-label{font-size:13px;margin-bottom:6px}
-input{padding:12px;border-radius:8px;border:none;font-size:16px}
-
-button.calc{
-  margin-top:24px;width:100%;padding:16px;border:none;border-radius:10px;
-  font-size:16px;font-weight:bold;cursor:pointer;background:#00bcd4
+body {
+  background: #1a1a1e;
+  color: #ccc;
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-.result{margin-top:24px;font-size:14px;line-height:1.7}
-
-/* Toggle */
-.toggle{position:relative;display:inline-block;width:34px;height:18px;vertical-align:middle;margin-left:6px}
-.toggle input{display:none}
-.slider{
-  position:absolute;top:0;left:0;right:0;bottom:0;
-  background:#666;border-radius:18px;transition:.2s
+.header {
+  background: #111115;
+  border-bottom: 1px solid #2a2a35;
+  padding: 14px 30px;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
 }
-.slider:before{
-  content:"";position:absolute;height:14px;width:14px;
-  left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s
+.header h1 { font-size: 22px; font-weight: bold; letter-spacing: 6px; color: #4fc3c3; text-transform: uppercase; }
+.header .tagline { font-size: 10px; letter-spacing: 2px; color: #555; }
+.header .credits { margin-left: auto; font-size: 9px; color: #333; letter-spacing: 1px; }
+
+.main-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 260px;
+  grid-template-rows: auto auto;
+  gap: 0;
 }
-.toggle input:checked + .slider{background:#1bbf4a}
-.toggle input:checked + .slider:before{transform:translateX(16px)}
-.toggle.disabled .slider{background:#666}
-.toggle.disabled .slider:before{background:#fff}
 
-.header-line{display:flex;justify-content:space-between;align-items:center;font-weight:bold;margin-top:14px}
-.pad-label{font-size:12px;color:#ccc}
-.pad-note{color:#ffd54a;font-size:12px}
+.params-panel {
+  background: #14141a;
+  border-right: 1px solid #2a2a35;
+  padding: 16px 14px;
+  font-size: 11px;
+}
+.params-panel.right { border-right: none; border-left: 1px solid #2a2a35; }
 
-@media(max-width:480px){.wrapper{padding:8px}}
+.param-section { margin-bottom: 14px; }
+.param-section-title {
+  font-size: 9px; letter-spacing: 2px; color: #4fc3c3;
+  text-transform: uppercase; border-bottom: 1px solid #2a2a35;
+  padding-bottom: 4px; margin-bottom: 8px;
+}
+
+.param-row {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 5px; gap: 6px;
+}
+.param-label { font-size: 10px; color: #777; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.param-label.highlight { color: #4fc3c3; }
+.param-label.highlight2 { color: #a78bfa; }
+
+.param-value {
+  background: #0d0d12; border: 1px solid #2a2a35; border-radius: 2px;
+  padding: 2px 6px; font-size: 11px; color: #88ff99;
+  text-align: right; min-width: 64px; font-family: 'Courier New', monospace;
+}
+.param-value.blue   { color: #60aaff; }
+.param-value.amber  { color: #ffaa44; }
+.param-value.purple { color: #c084fc; }
+.param-value.dim    { color: #555; }
+.param-value.cyan   { color: #00ffff; }
+
+.param-input {
+  background: #0d0d12; border: 1px solid #333; border-radius: 2px;
+  padding: 2px 5px; color: #eee; font-size: 11px;
+  font-family: 'Courier New', monospace; width: 64px; text-align: right;
+}
+.param-input:focus { outline: none; border-color: #4fc3c3; }
+
+.preamp-face {
+  background: #1c1c22;
+  border-top: 3px solid #3a3a45;
+  border-bottom: 3px solid #3a3a45;
+  display: flex; flex-direction: column;
+  align-items: center; padding: 20px 16px; gap: 16px;
+}
+
+.preamp-top-bar {
+  width: 100%; display: flex; align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #2a2a35; padding-bottom: 10px;
+}
+.brand-label { font-size: 11px; letter-spacing: 3px; color: #4fc3c3; text-transform: uppercase; }
+.model-label { font-size: 9px; color: #333; letter-spacing: 2px; }
+
+.knobs-row {
+  display: flex; gap: 40px;
+  align-items: flex-start; justify-content: center; width: 100%;
+}
+
+.knob-unit { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.knob-label-top { font-size: 9px; letter-spacing: 2px; color: #555; text-transform: uppercase; }
+
+canvas.knob-canvas { cursor: ns-resize; display: block; }
+
+.knob-readout {
+  background: #0d0d12; border: 1px solid #2a2a35; border-radius: 2px;
+  padding: 3px 10px; font-size: 13px; color: #88ff99;
+  font-family: 'Courier New', monospace; min-width: 90px; text-align: center;
+}
+.knob-readout.amber { color: #ffaa44; }
+
+/* ── OUTPUT METER STRIP ── */
+.dbfs-strip {
+  width: 100%; display: flex; align-items: center;
+  gap: 8px; padding-top: 6px; border-top: 1px solid #2a2a35;
+}
+.dbfs-label { font-size: 9px; color: #555; letter-spacing: 1px; width: 60px; text-align: right; }
+.dbfs-bar-wrap {
+  flex: 1; height: 14px; background: #0a0a0f;
+  border: 1px solid #222; border-radius: 1px;
+  position: relative; overflow: hidden;
+}
+.dbfs-bar-fill {
+  height: 100%; background: #ffaa00;
+  transition: width 0.05s, background 0.15s;
+  border-radius: 1px;
+}
+.dbfs-value { font-size: 11px; color: #ffaa44; font-family: 'Courier New', monospace; min-width: 70px; }
+
+.gain-explain {
+  background: #0e0e16; border: 1px solid #2a3a4a; border-radius: 3px;
+  padding: 12px 16px; max-width: 500px; margin: 0 auto;
+  font-size: 10px; color: #888; line-height: 1.7; text-align: center;
+}
+.gain-explain strong { color: #4fc3c3; }
+.gain-explain em { color: #ffaa44; font-style: normal; }
+
+/* ── DR BARS SECTION ── */
+.dr-section {
+  grid-column: 1 / -1;
+  background: #13131a; border-top: 1px solid #2a2a35;
+  padding: 20px 30px; display: flex; flex-direction: column; gap: 14px;
+}
+.dr-section-title {
+  font-size: 9px; letter-spacing: 3px; color: #4fc3c3;
+  text-transform: uppercase; text-align: center;
+}
+.dr-bars-row {
+  display: flex; justify-content: center;
+  align-items: flex-start; gap: 60px;
+  min-height: 340px; position: relative;
+}
+
+.legend {
+  display: flex; justify-content: center; gap: 24px;
+  padding-top: 8px; border-top: 1px solid #2a2a35;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #666; }
+.legend-swatch { width: 14px; height: 14px; border-radius: 2px; }
+.col-mic   { background: #7fffd4; }
+.col-prein { background: #1fa8a8; }
+.col-preout{ background: #3a5fbf; }
+.col-adda  { background: #8855cc; }
+
+/* range input pair */
+.range-pair {
+  display: flex; gap: 8px; margin-top: 4px;
+}
+.range-pair label {
+  font-size: 9px; color: #444;
+  display: flex; flex-direction: column; gap: 2px; align-items: center;
+}
+.range-pair input {
+  width: 46px; background: #0d0d12; border: 1px solid #333;
+  color: #888; font-size: 10px; text-align: center;
+  padding: 2px; font-family: monospace; border-radius: 2px;
+}
+.range-pair input:focus { outline: none; border-color: #4fc3c3; color: #ccc; }
 </style>
 </head>
 <body>
 
-<div class="wrapper">
-<div class="container">
-<h1>Treb Dynamic Range Tool</h1>
-<div class="version">Beta v0.5.10</div>
-
-<div class="section">
-<h2>Microphone</h2>
-<div class="field"><label>Reference / Model</label><input id="micRef" placeholder="Neumann U87 i"></div>
-<div class="field"><label>SPL Max (dB SPL)</label><input id="splMax" type="number" value="122"></div>
-<div class="field"><label>SPL Min (dB SPL)</label><input id="splMin" type="number" value="5"></div>
-<div class="field"><label>Sensitivity (mV @ 94 dB SPL)</label><input id="sens" type="number" value="8"></div>
-<div class="field"><label>Mic Pad (dB) – optional</label><input id="micPad" type="text" value=""></div>
+<div class="header">
+  <h1>Treb GainStation</h1>
+  <span class="tagline">Mic Preamp · Dynamic Range Analyzer</span>
+  <span class="credits">by TREB AUDIO</span>
 </div>
 
-<div class="section">
-<h2>Preamp</h2>
-<div class="field"><label>Reference / Model</label><input id="preRef" placeholder="SPL Gain Station 1"></div>
-<div class="field"><label>Dynamic Range (dB)</label><input id="preDR" type="number" value="130"></div>
-<div class="field"><label>Max Input Level (dBu) @ Min Gain</label><input id="preInMax" type="number" value="17"></div>
-<div class="field"><label>Preamp Pad (dB) – optional</label><input id="prePad" type="text" value=""></div>
+<div class="main-layout">
 
-<h3>Gain Knob</h3>
-<div class="field"><label>Gain From (dB)</label><input id="gainFrom" type="number" value="10"></div>
-<div class="field"><label>Gain Up To (dB)</label><input id="gainTo" type="number" value="63"></div>
+  <!-- ── LEFT: MIC PARAMS ── -->
+  <div class="params-panel">
+    <div class="param-section">
+      <div class="param-section-title">Microphone</div>
+      <div class="param-row">
+        <span class="param-label">Max SPL</span>
+        <input id="p-maxSPL" class="param-input" type="number" value="130" step="1">
+        <span style="font-size:10px;color:#444">dB</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Sens. dBV</span>
+        <input id="p-micSensDbv" class="param-input" type="number" value="-50" step="0.1">
+        <span style="font-size:10px;color:#444">dBV</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Sens. dBu</span>
+        <input id="p-micSensDbu" class="param-input" type="number" value="-47.8" step="0.1">
+        <span style="font-size:10px;color:#444">dBu</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Sens. mV</span>
+        <input id="p-micSensMv" class="param-input" type="number" value="3.16" step="0.01">
+        <span style="font-size:10px;color:#444">mV</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Self-noise</span>
+        <input id="p-micNoise" class="param-input" type="number" value="15" step="1">
+        <span style="font-size:10px;color:#444">dBA</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Output Z</span>
+        <input id="p-micZ" class="param-input" type="number" value="150" step="10">
+        <span style="font-size:10px;color:#444">Ω</span>
+      </div>
+    </div>
 
-<h3>Output Knob</h3>
-<div class="field"><label>Min Output (dB)</label><input id="outMin" type="number" value="-26"></div>
-<div class="field"><label>Max Output (dB)</label><input id="outMax" type="number" value="6"></div>
-<div class="field"><label>Max Output Level (dBu)</label><input id="preOutMax" type="number" value="34"></div>
-</div>
+    <div class="param-section">
+      <div class="param-section-title">Mic Output (calculated)</div>
+      <div class="param-row">
+        <span class="param-label highlight">Max Volt Out</span>
+        <span class="param-value blue" id="r-micMaxDbu">—</span>
+        <span style="font-size:10px;color:#444">dBu</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Max Volt Out</span>
+        <span class="param-value dim" id="r-micMaxMv">—</span>
+        <span style="font-size:10px;color:#444">mV</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label highlight">Mic Min Volt</span>
+        <span class="param-value" id="r-micMinDbu">—</span>
+        <span style="font-size:10px;color:#444">dBu</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Mic S/N</span>
+        <span class="param-value amber" id="r-micSN">—</span>
+        <span style="font-size:10px;color:#444">dB</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Mic DR</span>
+        <span class="param-value amber" id="r-micDR">—</span>
+        <span style="font-size:10px;color:#444">dB</span>
+      </div>
+    </div>
 
-<div class="section">
-<h2>AD / DA Converter</h2>
-<div class="field"><label>Reference / Model</label><input id="adRef" placeholder="Antelope Zen Go"></div>
-<div class="field"><label>Max Input Level (dBu)</label><input id="adMax" type="number" value="20"></div>
-<div class="field"><label>Dynamic Range (dB)</label><input id="adDR" type="number" value="122"></div>
-</div>
+    <div class="param-section">
+      <div class="param-section-title">Pre Input (with Gain)</div>
+      <div class="param-row">
+        <span class="param-label highlight">Pre Max In</span>
+        <span class="param-value blue" id="r-preMaxIn">—</span>
+        <span style="font-size:10px;color:#444">dBu</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label highlight">Pre Min In</span>
+        <span class="param-value" id="r-preMinIn">—</span>
+        <span style="font-size:10px;color:#444">dBu</span>
+      </div>
+    </div>
+  </div>
 
-<button class="calc" id="calcBtn">Calculate</button>
-<div class="result" id="out"></div>
-</div>
-</div>
+  <!-- ── CENTER: PREAMP FACE ── -->
+  <div class="preamp-face">
+
+    <div class="preamp-top-bar">
+      <div>
+        <div class="brand-label">TREB · T - DR PRE 1</div>
+        <div class="model-label">MICROPHONE PREAMPLIFIER</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <div style="width:7px;height:7px;border-radius:50%;background:#002b33;border:1px solid #003d55;transition:all 0.1s;" id="led-sig"></div>
+        <div style="width:7px;height:7px;border-radius:50%;background:#332200;border:1px solid #554400;transition:all 0.1s;" id="led-peak"></div>
+        <div style="width:7px;height:7px;border-radius:50%;background:#220000;border:1px solid #440000;transition:all 0.1s;" id="led-clip"></div>
+        <span style="font-size:8px;color:#333;letter-spacing:2px;margin-left:4px;">SIG · PEAK · CLIP</span>
+      </div>
+    </div>
+
+    <div class="knobs-row">
+
+      <!-- GAIN KNOB -->
+      <div class="knob-unit">
+        <div class="knob-label-top">GAIN</div>
+        <canvas id="knob-gain" class="knob-canvas" width="110" height="110"></canvas>
+        <div class="knob-readout" id="gain-readout">+10.0 dB</div>
+        <div class="range-pair">
+          <label>MIN dB<input id="gain-min" type="number" value="10" step="1"></label>
+          <label>MAX dB<input id="gain-max" type="number" value="63" step="1"></label>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:30px;">
+        <div style="width:40px;height:2px;background:#2a2a35;"></div>
+        <div style="font-size:8px;color:#2a2a35;letter-spacing:1px;text-align:center;">SIGNAL<br>FLOW</div>
+        <div style="width:40px;height:2px;background:#2a2a35;"></div>
+      </div>
+
+      <!-- OUTPUT KNOB -->
+      <div class="knob-unit">
+        <div class="knob-label-top">OUTPUT LEVEL</div>
+        <canvas id="knob-out" class="knob-canvas" width="110" height="110"></canvas>
+        <div class="knob-readout amber" id="out-readout">0.0 dB</div>
+        <div class="range-pair">
+          <label>MIN dB<input id="out-min" type="number" value="-26" step="1"></label>
+          <label>MAX dB<input id="out-max" type="number" value="6" step="1"></label>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- face mini readouts -->
+    <div style="width:100%;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;">
+      <div style="background:#111;border:1px solid #2a2a35;border-radius:2px;padding:6px 8px;text-align:center;">
+        <div style="font-size:8px;color:#444;letter-spacing:1px;text-transform:uppercase;">Pre Max In</div>
+        <div style="font-size:13px;color:#60aaff;font-family:monospace;" id="face-preIn">—</div>
+        <div style="font-size:8px;color:#333;">dBu</div>
+      </div>
+      <div style="background:#111;border:1px solid #2a2a35;border-radius:2px;padding:6px 8px;text-align:center;">
+        <div style="font-size:8px;color:#444;letter-spacing:1px;text-transform:uppercase;">Pre Max Out</div>
+        <div style="font-size:13px;color:#88ff99;font-family:monospace;" id="face-preOut">—</div>
+        <div style="font-size:8px;color:#333;">dBu</div>
+      </div>
+      <div style="background:#111;border:1px solid #2a2a35;border-radius:2px;padding:6px 8px;text-align:center;">
+        <div style="font-size:8px;color:#444;letter-spacing:1px;text-transform:uppercase;">Out Level</div>
+        <div style="font-size:13px;color:#ffaa44;font-family:monospace;" id="face-outLevel">—</div>
+        <div style="font-size:8px;color:#333;">dBu</div>
+      </div>
+      <div style="background:#111;border:1px solid #2a2a35;border-radius:2px;padding:6px 8px;text-align:center;">
+        <div style="font-size:8px;color:#444;letter-spacing:1px;text-transform:uppercase;">dBFS</div>
+        <div style="font-size:13px;font-family:monospace;" id="face-dbfs" style="color:#ffaa44;">—</div>
+        <div style="font-size:8px;color:#333;">dBFS</div>
+      </div>
+    </div>
+
+    <!-- GAIN METER -->
+    <div class="dbfs-strip">
+      <span class="dbfs-label">GAIN</span>
+      <div class="dbfs-bar-wrap">
+        <div class="dbfs-bar-fill" id="gain-bar-fill" style="width:0%"></div>
+      </div>
+      <span class="dbfs-value" id="gain-bar-value" style="color:#4fc3c3;">— dBu</span>
+    </div>
+
+    <!-- OUTPUT METER -->
+    <div class="dbfs-strip">
+      <span class="dbfs-label">OUTPUT</span>
+      <div class="dbfs-bar-wrap">
+        <div class="dbfs-bar-fill" id="dbfs-bar-fill" style="width:0%"></div>
+      </div>
+      <span class="dbfs-value" id="dbfs-value">— dBFS</span>
+    </div>
+
+    <div class="gain-explain">
+      <strong>¿Cómo funciona el GAIN?</strong><br>
+      Subir el gain <em>no amplifica</em> la señal — <strong>baja el umbral de entrada del preamp</strong>.<br>
+      Más gain → el preamp acepta señales más débiles del mic → aprovecha más rango dinámico.
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT: PREAMP + ADC PARAMS ── -->
+  <div class="params-panel right">
+    <div class="param-section">
+      <div class="param-section-title">Preamplifier</div>
+      <!-- Max Pre Input first (as requested) -->
+      <div class="param-row">
+        <span class="param-label highlight">Max Pre Input</span>
+        <input id="p-preMaxIn" class="param-input" type="number" value="17" step="1" title="Max dBu the pre accepts at minimum gain setting">
+        <span style="font-size:10px;color:#444">dBu</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Max Pre Out</span>
+        <input id="p-preMaxOut" class="param-input" type="number" value="34" step="1">
+        <span style="font-size:10px;color:#444">dBu</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Pre DR</span>
+        <input id="p-preDR" class="param-input" type="number" value="130" step="1" title="Pre dynamic range in dB. Updates Pre Noise automatically.">
+        <span style="font-size:10px;color:#444">dB</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Pre Noise</span>
+        <input id="p-preNoise" class="param-input" type="number" value="-113" step="0.1" title="Pre noise floor in dBu. Updates Pre DR automatically.">
+        <span style="font-size:10px;color:#444">dBu</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Pre Input Z</span>
+        <input id="p-preZ" class="param-input" type="number" value="1500" step="100">
+        <span style="font-size:10px;color:#444">Ω</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Mic/Pre Att</span>
+        <input id="p-att" class="param-input" type="number" value="0" step="0.1">
+        <span style="font-size:10px;color:#444">dB</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">GAIN range</span>
+        <span class="param-value dim" id="r-gainRange">—</span>
+        <span style="font-size:10px;color:#444">dB</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">OUTPUT range</span>
+        <span class="param-value dim" id="r-outRange">—</span>
+        <span style="font-size:10px;color:#444">dB</span>
+      </div>
+    </div>
+
+    <div class="param-section">
+      <div class="param-section-title">AD / DA Converter</div>
+      <div class="param-row">
+        <span class="param-label">AD Max Input</span>
+        <input id="p-adMax" class="param-input" type="number" value="20" step="1">
+        <span style="font-size:10px;color:#444">dBu</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">AD DR (analog)</span>
+        <input id="p-adDR" class="param-input" type="number" value="118" step="1">
+        <span style="font-size:10px;color:#444">dB</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label highlight2">AD Min Input</span>
+        <span class="param-value purple" id="r-adMin">—</span>
+        <span style="font-size:10px;color:#444">dBu</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">AD Input Z</span>
+        <input id="p-adZ" class="param-input" type="number" value="10000" step="1000">
+        <span style="font-size:10px;color:#444">Ω</span>
+      </div>
+      <div class="param-row" style="margin-top:4px;padding-top:4px;border-top:1px solid #1e1e28;">
+        <span class="param-label">Bit Depth</span>
+        <select id="p-bits" style="background:#0d0d12;border:1px solid #333;color:#eee;font-family:monospace;font-size:11px;padding:2px 4px;width:64px;border-radius:2px;">
+          <option value="16">16-bit</option>
+          <option value="20">20-bit</option>
+          <option value="24" selected>24-bit</option>
+          <option value="32">32-bit</option>
+        </select>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Digital DR</span>
+        <span class="param-value purple" id="r-digDR">—</span>
+        <span style="font-size:10px;color:#444">dB</span>
+      </div>
+    </div>
+
+    <div class="param-section">
+      <div class="param-section-title">Output (calculated)</div>
+      <div class="param-row">
+        <span class="param-label">Signal</span>
+        <span class="param-value amber" id="r-outDbFS">—</span>
+        <span style="font-size:10px;color:#444">dBFS</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Headroom</span>
+        <span class="param-value" id="r-headroom">—</span>
+        <span style="font-size:10px;color:#444">dB</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Out → AD match</span>
+        <span class="param-value" id="r-match">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DR BARS SECTION ── -->
+  <div class="dr-section">
+    <div class="dr-section-title">Dynamic Range · Signal Chain Visualization</div>
+    <div class="dr-bars-row" id="dr-bars-row"></div>
+    <div class="gain-explain" style="max-width:700px;">
+      <strong>Lectura de las barras:</strong>
+      Zona <em>oscura superior</em> = headroom &nbsp;·&nbsp;
+      zona <em>coloreada</em> = rango dinámico útil &nbsp;·&nbsp;
+      zona <em>oscura inferior</em> = ruido.<br>
+      Al subir el GAIN la barra PRE IN desciende — el preamp "abre" su ventana para capturar señales más débiles del mic.<br>
+      <strong>Cian</strong> = el nivel de salida hace match exacto con el límite del AD.
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch col-mic"></div>MIC</div>
+      <div class="legend-item"><div class="legend-swatch col-prein"></div>PRE IN</div>
+      <div class="legend-item"><div class="legend-swatch col-preout"></div>PRE OUT</div>
+      <div class="legend-item"><div class="legend-swatch col-adda"></div>AD/DA</div>
+    </div>
+  </div>
+
+</div><!-- /main-layout -->
 
 <script>
-function voltsToDBu(v){return 20*Math.log10(v/0.775);}
-function parsePad(val){ if(!val) return 0; return parseFloat(val); }
-function rawPadText(val){ return val.toString().trim(); }
-function absPad(val){ return Math.abs(parseFloat(val)); }
+/* ══════════════════════════════════════════════════
+   KNOB ENGINE — supports dynamic min/max
+══════════════════════════════════════════════════ */
+function makeKnob(canvasId, opts) {
+  const canvas = document.getElementById(canvasId);
+  const ctx    = canvas.getContext("2d");
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const R  = 44;
 
-let micPadOn=false, prePadOn=false;
+  // Canvas coordinate system: 0°=3oclock, angles increase CLOCKWISE on screen
+  // (because Y axis points down in canvas)
+  // Clock positions in canvas degrees:
+  //   7 o'clock (bottom-left)  = 120° in canvas
+  //   12 o'clock (top)         = 270° in canvas  
+  //   5 o'clock (bottom-right) = 60°  in canvas (= -300° or just 60°)
+  // CW sweep from 7oc→12oc→5oc: 120° → 270° → 360°→ 60° = 300° total CW sweep ✓
+  const ARC_START = 120 * Math.PI / 180;  // 7 o'clock = 120°
+  const ARC_END   =  60 * Math.PI / 180;  // 5 o'clock = 60°
+  const ARC_CCW   = false;               // clockwise on screen
+  const ARC_RANGE = 300 * Math.PI / 180;  // 300° total sweep CW
 
-function calculate(){
-  const micPadRaw = micPad.value.trim();
-  const prePadRaw = prePad.value.trim();
+  let _min   = opts.min;
+  let _max   = opts.max;
+  let _value = Math.min(_max, Math.max(_min, opts.init));
+  let isDragging = false;
+  let lastY = 0;
 
-  const micPadVal=parsePad(micPadRaw);
-  const prePadVal=parsePad(prePadRaw);
+  function valToAngle(v) {
+    const ratio = (_max === _min) ? 0 : (v - _min) / (_max - _min);
+    const r = Math.min(1, Math.max(0, ratio));
+    // CW = increasing canvas angle from ARC_START
+    return ARC_START + r * ARC_RANGE;
+  }
 
-  const micHasPad = micPadVal!==0;
-  const preHasPad = prePadVal!==0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if(!micHasPad) micPadOn=false;
-  if(!preHasPad) prePadOn=false;
+    // bg arc: full sweep CW from 7 o'clock to 5 o'clock (going up through 12)
+    ctx.beginPath();
+    ctx.arc(cx, cy, R + 6, ARC_START, ARC_END, ARC_CCW);
+    ctx.strokeStyle = "#2a2a35"; ctx.lineWidth = 3; ctx.stroke();
 
-  const micPadActive = micHasPad && micPadOn;
-  const prePadActive = preHasPad && prePadOn;
+    // value arc: from ARC_START going CCW to current value angle
+    const vAng = valToAngle(_value);
+    ctx.beginPath();
+    ctx.arc(cx, cy, R + 6, ARC_START, vAng, ARC_CCW);
+    ctx.strokeStyle = opts.color || "#4fc3c3"; ctx.lineWidth = 3; ctx.stroke();
 
-  const splMaxEff=Number(splMax.value)+(micPadActive?micPadVal:0);
-  const splMinEff=Number(splMin.value)+(micPadActive?micPadVal:0);
-  const sensEff=Number(sens.value)*Math.pow(10,-(micPadActive?micPadVal:0)/20);
+    // body
+    const grad = ctx.createRadialGradient(cx-12, cy-12, 2, cx, cy, R);
+    grad.addColorStop(0, "#4a4a55");
+    grad.addColorStop(1, "#1c1c24");
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.strokeStyle = "#111"; ctx.lineWidth = 1.5; ctx.stroke();
 
-  const micVmin=sensEff*Math.pow(10,(splMinEff-94)/20);
-  const micVmax=sensEff*Math.pow(10,(splMaxEff-94)/20);
-  const micMin_dBu=voltsToDBu(micVmin/1000);
-  const micMax_dBu=voltsToDBu(micVmax/1000);
+    // tick marks: spread CW from ARC_START to ARC_END
+    for (let i = 0; i <= 10; i++) {
+      const a  = ARC_START + (i / 10) * ARC_RANGE;
+      const r1 = R + 10, r2 = R + 14;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a)*r1, cy + Math.sin(a)*r1);
+      ctx.lineTo(cx + Math.cos(a)*r2, cy + Math.sin(a)*r2);
+      ctx.strokeStyle = "#333"; ctx.lineWidth = 1; ctx.stroke();
+    }
 
-  const preInMaxEff=Number(preInMax.value)-(prePadActive?prePadVal:0);
-  const preMinInput=preInMaxEff-Number(preDR.value);
+    // indicator: line (0,-R) points UP in local space.
+    // To point at canvas angle vAng: rotate so that local -Y aligns with vAng direction.
+    // Local -Y = angle -PI/2. After rotate(θ), local -Y points at θ - PI/2.
+    // We want θ - PI/2 = vAng → θ = vAng + PI/2
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(vAng + Math.PI / 2);
+    ctx.beginPath();
+    ctx.moveTo(0, -R + 6); ctx.lineTo(0, -10);
+    ctx.strokeStyle = opts.indicatorColor || "#ffcc00";
+    ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.stroke();
+    ctx.restore();
 
-  const gainMax=Number(gainFrom.value)+(preInMaxEff-micMax_dBu);
-  const gainMin=Number(gainFrom.value)+(preMinInput-micMin_dBu);
+    // center dot
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+    ctx.fillStyle = "#111"; ctx.fill();
+  }
 
-  const outputKnob=Number(outMax.value)+(Number(adMax.value)-Number(preOutMax.value));
+  function setValue(v) {
+    _value = Math.min(_max, Math.max(_min, v));
+    draw();
+    if (opts.onChange) opts.onChange(_value);
+  }
 
-  document.getElementById("out").innerHTML=`
-<div class="header-line">
-<span>Microphone — ${micRef.value||"—"}</span>
-<span class="pad-label">
-Pad ${micHasPad?rawPadText(micPadRaw)+' dB':'(n/a)'}
-<label class="toggle ${!micHasPad?'disabled':''}">
-<input type="checkbox" ${micPadActive?'checked':''} ${!micHasPad?'disabled':''}
- onchange="micPadOn=this.checked;calculate();">
-<span class="slider"></span>
-</label>
-</span>
-</div>
-Effective SPL Range: ${splMinEff.toFixed(1)} → ${splMaxEff.toFixed(1)} dB SPL<br>
-Dynamic Range: ${(splMaxEff-splMinEff).toFixed(1)} dB<br>
-Min Output: ${micMin_dBu.toFixed(2)} dBu<br>
-Max Output: ${micMax_dBu.toFixed(2)} dBu<br><br>
+  function setRange(newMin, newMax) {
+    if (newMin >= newMax) return;
+    _min = newMin;
+    _max = newMax;
+    _value = Math.min(_max, Math.max(_min, _value));
+    draw();
+    if (opts.onChange) opts.onChange(_value);
+  }
 
-<div class="header-line">
-<span>Preamp — ${preRef.value||"—"}</span>
-<span class="pad-label">
-Pad ${preHasPad?rawPadText(prePadRaw)+' dB':'(n/a)'}
-<label class="toggle ${!preHasPad?'disabled':''}">
-<input type="checkbox" ${prePadActive?'checked':''} ${!preHasPad?'disabled':''}
- onchange="prePadOn=this.checked;calculate();">
-<span class="slider"></span>
-</label>
-</span>
-</div>
-Available Gain: ${gainFrom.value} → ${gainTo.value} dB ${prePadActive?'<span class="pad-note">+'+absPad(prePadVal)+' dB</span>':''}<br>
-Min Theoretical Input @ Min Gain: ${(preMinInput).toFixed(1)} dBu<br>
-Min Theoretical Input @ Max Gain: ${(preMinInput-(gainTo.value-gainFrom.value)).toFixed(1)} dBu<br><br>
+  canvas.addEventListener("mousedown", e => {
+    isDragging = true; lastY = e.clientY; e.preventDefault();
+  });
+  document.addEventListener("mousemove", e => {
+    if (!isDragging) return;
+    const delta = lastY - e.clientY;
+    lastY = e.clientY;
+    setValue(_value + delta * ((_max - _min) / 200));
+  });
+  document.addEventListener("mouseup", () => { isDragging = false; });
 
-<b>Gain Recommendations</b><br>
-Recommended Gain: ${gainMax.toFixed(1)} dB – Match Max SPL<br>
-Recommended Gain: ${gainMin.toFixed(1)} dB – Match Min SPL<br><br>
+  canvas.addEventListener("wheel", e => {
+    e.preventDefault();
+    setValue(_value - Math.sign(e.deltaY) * ((_max - _min) / 100));
+  }, { passive: false });
 
-<b>Output Knob</b><br>
-Recommended Output Knob: ${outputKnob.toFixed(1)} dB<br><br>
+  canvas.addEventListener("touchstart", e => {
+    isDragging = true; lastY = e.touches[0].clientY; e.preventDefault();
+  }, { passive: false });
+  document.addEventListener("touchmove", e => {
+    if (!isDragging) return;
+    const delta = lastY - e.touches[0].clientY;
+    lastY = e.touches[0].clientY;
+    setValue(_value + delta * ((_max - _min) / 200));
+  });
+  document.addEventListener("touchend", () => { isDragging = false; });
 
-<b>AD Converter — ${adRef.value||"—"}</b><br>
-Min Input Level: ${(Number(adMax.value)-Number(adDR.value)).toFixed(1)} dBu<br>
-Max Input Level: ${Number(adMax.value).toFixed(1)} dBu
-`;
+  draw();
+  return { getValue: () => _value, setValue, setRange, getMin: () => _min, getMax: () => _max };
 }
 
-window.addEventListener("load",()=>{
-  document.getElementById("calcBtn").addEventListener("click",calculate);
+
+/* ══════════════════════════════════════════════════
+   PARAMS
+══════════════════════════════════════════════════ */
+function getParams() {
+  const gMin = parseFloat(document.getElementById("gain-min").value);
+  const gMax = parseFloat(document.getElementById("gain-max").value);
+  const oMin = parseFloat(document.getElementById("out-min").value);
+  const oMax = parseFloat(document.getElementById("out-max").value);
+  const preMaxOut   = parseFloat(document.getElementById("p-preMaxOut").value) || 17;
+  const preDRinp    = parseFloat(document.getElementById("p-preDR").value);
+  const preNoiseInp = parseFloat(document.getElementById("p-preNoise").value);
+  return {
+    maxSPL:      parseFloat(document.getElementById("p-maxSPL").value)     || 130,
+    micSensDbv:  parseFloat(document.getElementById("p-micSensDbv").value) || -50,
+    micNoise:    parseFloat(document.getElementById("p-micNoise").value)   || 15,
+    preMaxOut,
+    preNoise:    isNaN(preNoiseInp) ? (preMaxOut - (isNaN(preDRinp) ? 130 : preDRinp)) : preNoiseInp,
+    preMaxIn:    isNaN(parseFloat(document.getElementById("p-preMaxIn").value)) ? 0 : parseFloat(document.getElementById("p-preMaxIn").value),
+    att:         isNaN(parseFloat(document.getElementById("p-att").value)) ? 0 : parseFloat(document.getElementById("p-att").value),
+    adMax:       parseFloat(document.getElementById("p-adMax").value)      || 20,
+    adDR:        parseFloat(document.getElementById("p-adDR").value)       || 118,
+    bits:        parseInt(document.getElementById("p-bits").value)         || 24,
+    gainMin:     isNaN(gMin) ? 10  : gMin,
+    gainMax:     isNaN(gMax) ? 63  : gMax,
+    outMin:      isNaN(oMin) ? -34 : oMin,
+    outMax:      isNaN(oMax) ? 0   : oMax,
+  };
+}
+
+
+/* ══════════════════════════════════════════════════
+   MATH
+══════════════════════════════════════════════════ */
+function calcAll(gainDb, outDb) {
+  const p = getParams();
+
+  // Mic
+  const micSensDBu     = p.micSensDbv + 2.21;
+  const micMaxDBu      = micSensDBu + (p.maxSPL - 94);
+  const micNoiseDBu    = micSensDBu - (94 - p.micNoise);
+  const micMaxMv       = 775 * Math.pow(10, micMaxDBu / 20);
+  const micSN          = micMaxDBu - micNoiseDBu;
+  const micDR          = micMaxDBu - micNoiseDBu;
+
+// Pre output (fixed internal range)
+  const preMaxOutVal = p.preMaxOut;
+  const preMinOut    = p.preNoise;
+  const preDR        = preMaxOutVal - preMinOut;
+
+  // Pre input window (moves with gain)
+  // At gainMin: threshold = p.preMaxIn (user-assigned)
+  // Each extra dB of gain lowers threshold by 1 dB
+  const gainMinDb   = p.gainMin;
+  const preMaxInVal = p.preMaxIn - (gainDb - gainMinDb);
+  const preMinInVal = preMaxInVal - preDR;
+
+  // Mic plus
+
+   const micUpOutRange  = Math.abs (preMaxInVal - micMaxDBu);
+   const micDownOutRange = Math.abs (preMinInVal- micNoiseDBu);
+
+  // Output: outDb is absolute knob value (e.g. +6 to -26 dB for SPL Gainstation)
+  // outMax on the knob corresponds to preMaxOut in dBu.
+  // So: outSignalDBu = preMaxOut + (outDb - outMax)
+  const outSignalDBu = preMaxOutVal + (outDb - p.outMax);
+
+  // AD
+  const adMinDBu    = p.adMax - p.adDR;
+  const digDR       = p.bits * 6.02 + 1.76;
+  const adInputDBFS = outSignalDBu - p.adMax;
+  const headroom    = p.adMax - outSignalDBu;
+
+  // Match detection — tolerance ±0.1 dB
+  const TOL = 0.1;
+  const outMatchesAdMax    = Math.abs(outSignalDBu - p.adMax) <= TOL;
+  const preMinMatchesAdMin = Math.abs(preMinOut - adMinDBu) <= TOL;
+
+  // Gain match vs mic: top = preMaxIn aligns with micMaxDBu (high-SPL capture)
+  //                    bot = preMinIn aligns with micNoiseDBu (low-SPL capture)
+  const gainMatchTop = Math.abs(preMaxInVal - micMaxDBu) <= TOL;
+  const gainMatchBot = Math.abs(preMinInVal - micNoiseDBu) <= TOL;
+
+  // Effective DR
+  // Gain Effective DR: from preMaxIn down to mic noise floor
+   const gainEffDR = preDR - micUpOutRange - micDownOutRange;
+
+  // Out Effective DR: usable range inside the AD window
+  // Top: min(outSignalDBu, adMax)  — clip if signal overloads AD
+  // Bottom: max(preMinOut + outOffset, adMinDBu) — clip if pre noise floor is below AD minimum
+  const outOffset  = outSignalDBu - preMaxOutVal;       // how far output is from pre ceiling
+  const preFloorAtOut = preMinOut + outOffset;          // pre noise floor shifted by output offset
+  const outEffTop  = Math.min(outSignalDBu, adMinDBu + p.adDR);  // cap at adMax
+  const outEffBot  = Math.max(preFloorAtOut, adMinDBu);          // raise to adMin if pre floor is lower
+  const outEffDR   = Math.max(0, outEffTop - outEffBot);
+
+  return {
+    micMaxDBu, micNoiseDBu, micMaxMv, micSN, micDR, micSensDBu,
+    preMaxIn: preMaxInVal, preMinIn: preMinInVal,
+    preMaxOutVal, preMinOut, preDR,
+    outSignalDBu, outDb,
+    adMinDBu, digDR, adInputDBFS, headroom,
+    outMatchesAdMax, preMinMatchesAdMin,
+    gainMatchTop, gainMatchBot,
+    gainEffDR, outEffDR,
+    p, gainDb
+  };
+}
+
+
+/* ══════════════════════════════════════════════════
+   FORMAT HELPERS
+══════════════════════════════════════════════════ */
+function fmt(v, dec=1) {
+  if (!isFinite(v)) return "—";
+  return (v >= 0 ? "+" : "") + v.toFixed(dec);
+}
+function fmtN(v, dec=1) {
+  if (!isFinite(v)) return "—";
+  return v.toFixed(dec);
+}
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+
+/* ══════════════════════════════════════════════════
+   UPDATE READOUTS
+══════════════════════════════════════════════════ */
+function updateReadouts(r) {
+  setText("r-micMaxDbu",  fmt(r.micMaxDBu));
+  setText("r-micMaxMv",   r.micMaxMv.toFixed(2));
+  setText("r-micMinDbu",  fmt(r.micNoiseDBu));
+  setText("r-micSN",      fmtN(r.micSN));
+  setText("r-micDR",      fmtN(r.micDR));
+  setText("r-preMaxIn",   fmt(r.preMaxIn));
+  setText("r-preMinIn",   fmt(r.preMinIn));
+
+  setText("r-preMaxOut",  fmt(r.preMaxOutVal));
+  setText("r-preMinOut",  fmt(r.preMinOut));
+  setText("r-preDR",      fmtN(r.preDR));
+  setText("r-gainRange",  fmtN(r.p.gainMax - r.p.gainMin));
+  setText("r-outRange",   fmtN(r.p.outMax  - r.p.outMin));
+
+  // Effective DR readouts
+  setText("r-gainEffDR", fmtN(r.gainEffDR));
+  setText("r-outEffDR",  fmtN(r.outEffDR));
+
+  setText("r-adMin",      fmt(r.adMinDBu));
+  setText("r-digDR",      fmtN(r.digDR));
+  setText("r-outDbFS",    fmt(r.adInputDBFS));
+  setText("r-headroom",   fmtN(r.headroom));
+
+  // Match indicator
+  const matchEl = document.getElementById("r-match");
+  if (r.outMatchesAdMax) {
+    matchEl.textContent = "✓ MATCH";
+    matchEl.className   = "param-value cyan";
+  } else {
+    matchEl.textContent = fmt(r.outSignalDBu - r.p.adMax) + " dB";
+    matchEl.className   = "param-value dim";
+  }
+
+  // Face readouts
+  setText("face-preIn",    fmt(r.preMaxIn));
+  setText("face-preOut",   fmt(r.preMaxOutVal));
+  setText("face-outLevel", fmt(r.outSignalDBu));
+
+  const faceDbfs = document.getElementById("face-dbfs");
+  setText("face-dbfs",     fmt(r.adInputDBFS));
+  faceDbfs.style.color = r.outMatchesAdMax ? "#00ffff" : "#ffaa44";
+
+  // Output meter bar
+  // Map outSignalDBu into bar: full bar = adMax, empty = adMax - adDR
+  const barRange = r.p.adDR;
+  const barPct   = Math.max(0, Math.min(100,
+    (r.outSignalDBu - r.adMinDBu) / barRange * 100
+  ));
+  const bf  = document.getElementById("dbfs-bar-fill");
+  const bv  = document.getElementById("dbfs-value");
+  bf.style.width = barPct + "%";
+
+  if (r.outMatchesAdMax) {
+    bf.style.background = "#00ffff";
+    bv.style.color      = "#00ffff";
+  } else {
+    bf.style.background = "#ffaa00";
+    bv.style.color      = "#ffaa44";
+  }
+  bv.textContent = fmt(r.adInputDBFS) + " dBFS";
+
+  // ── GAIN meter bar ──
+  // Maps preMaxIn across the mic's dynamic range (micNoiseDBu → micMaxDBu)
+  const gainBarRange = r.micDR;
+  const gainBarFill  = r.preMaxIn - r.micNoiseDBu;
+  const gainBarPct   = Math.max(0, Math.min(100, gainBarFill / gainBarRange * 100));
+
+  const gf = document.getElementById("gain-bar-fill");
+  const gv = document.getElementById("gain-bar-value");
+  gf.style.width = gainBarPct + "%";
+
+  // Cyan ONLY on exact match (top or bot), amber otherwise
+  if (r.gainMatchTop || r.gainMatchBot) {
+    gf.style.background = "#00ffff";
+    gv.style.color      = "#00ffff";
+  } else {
+    gf.style.background = "#ffaa00";
+    gv.style.color      = "#ffaa44";
+  }
+  gv.textContent = fmt(r.preMaxIn) + " dBu";
+  const sig  = document.getElementById("led-sig");
+  const peak = document.getElementById("led-peak");
+  const clip = document.getElementById("led-clip");
+  if (r.adInputDBFS > -18) { sig.style.background="#00cccc"; sig.style.boxShadow="0 0 4px #00cccc"; }
+  else                     { sig.style.background="#003333"; sig.style.boxShadow="none"; }
+  if (r.adInputDBFS > -1)  { peak.style.background="#ffaa00"; peak.style.boxShadow="0 0 4px #ffaa00"; }
+  else                     { peak.style.background="#332200"; peak.style.boxShadow="none"; }
+  if (r.adInputDBFS >= +0.1)  { clip.style.background="#ff3333"; clip.style.boxShadow="0 0 4px #ff3333"; }
+  else                     { clip.style.background="#220000"; clip.style.boxShadow="none"; }
+}
+
+
+/* ══════════════════════════════════════════════════
+   DR BARS
+══════════════════════════════════════════════════ */
+function renderDRBars(r) {
+  const container = document.getElementById("dr-bars-row");
+
+  // PRE OUT bar moves with output knob: offset = outSignalDBu - preMaxOutVal
+  const outOffset = r.outSignalDBu - r.preMaxOutVal;  // ≤ 0
+  const preOutTop = r.preMaxOutVal + outOffset;  // = outSignalDBu
+  const preOutBot = r.preMinOut    + outOffset;
+  const allLevels = [
+    r.micMaxDBu, r.micNoiseDBu,
+    r.preMaxIn,  r.preMinIn,
+    r.preMaxOutVal, r.preMinOut,
+    preOutTop, preOutBot,
+    r.outSignalDBu,
+    r.p.adMax, r.adMinDBu
+  ].filter(isFinite);
+
+  const globalMax   = Math.max(...allLevels) + 10;
+  const globalMin   = Math.min(...allLevels) - 10;
+  const globalRange = globalMax - globalMin;
+  const RULER_H     = 320;
+  const pxPerDb     = RULER_H / globalRange;
+
+  function dbu2px(db) { return (globalMax - db) * pxPerDb; }
+
+  // Match flags for coloring
+  const outMatchTop = r.outMatchesAdMax;
+  const outMatchBot = r.preMinMatchesAdMin;
+
+  const stages = [
+    {
+      name: "MIC",
+      top: r.micMaxDBu,
+      bot: r.micNoiseDBu,
+      color: "#7fffd4",
+      topLabel: fmt(r.micMaxDBu) + " dBu",
+      botLabel: fmt(r.micNoiseDBu) + " dBu",
+      extraLines: [],
+      splitDb: null,
+    },
+    {
+      name: "PRE IN",
+      top: r.preMaxIn,
+      bot: r.preMinIn,
+      color: "#1fa8a8",
+      topLabel: fmt(r.preMaxIn) + " dBu",
+      botLabel: fmt(r.preMinIn) + " dBu",
+      extraLines: [
+        { db: r.micMaxDBu,   color: "#7fffd499", label: "mic max" },
+        { db: r.micNoiseDBu, color: "#7fffd455", label: "mic floor" },
+      ],
+      splitDb: null,
+      // Useful range = where mic signal falls: micNoiseDBu → micMaxDBu
+      usefulTop: r.micMaxDBu,
+      usefulBot: r.micNoiseDBu,
+      effDR: { top: r.preMaxIn, bot: r.micNoiseDBu, value: r.gainEffDR, label: "Gain Eff. DR", color: "#1e9798" },
+    },
+    {
+      name: "PRE OUT",
+      top: preOutTop,
+      bot: preOutBot,
+      color: "#3a5fbf",
+      topLabel: fmt(preOutTop) + " dBu",
+      botLabel: fmt(preOutBot) + " dBu",
+      splitDb: null,
+      extraLines: [
+        { db: r.preMaxOutVal, color: "#3a5fbf66", label: "pre ceil" },
+      ],
+      // Useful range = within preMaxOut and preNoise
+      usefulTop: r.preMaxOutVal,
+      usefulBot: r.preMinOut,
+    },
+    {
+      name: "AD / DA",
+      top: r.p.adMax,
+      bot: r.adMinDBu,
+      color: "#8855cc",
+      headroomColor: "#2a1a44",
+      topLabel: fmt(r.p.adMax) + " dBu",
+      botLabel: fmt(r.adMinDBu) + " dBu",
+      splitDb: r.outSignalDBu,
+      splitLabel: fmt(r.outSignalDBu) + " dBu",
+      splitColor: outMatchTop ? "#00ffff" : "#ffffff88",
+      extraLines: [],
+      // usefulBot = max(preFloorAtOut, adMinDBu): zone below this is wasted (pre noise below AD floor)
+      usefulTop: r.p.adMax,
+      usefulBot: Math.max(r.preMinOut + (r.outSignalDBu - r.preMaxOutVal), r.adMinDBu),
+      effDR: {
+        top: Math.min(r.outSignalDBu, r.p.adMax),
+        bot: Math.max(r.preMinOut + (r.outSignalDBu - r.preMaxOutVal), r.adMinDBu),
+        value: r.outEffDR,
+        label: "Out Eff. DR",
+        color: "#c084fc"
+      },
+    }
+  ];
+
+  container.innerHTML = "";
+
+  stages.forEach((st, si) => {
+    const col = document.createElement("div");
+    col.style.cssText = "display:flex;flex-direction:column;align-items:center;position:relative;";
+
+    // stage name
+    const nm = document.createElement("div");
+    nm.style.cssText = "font-size:9px;letter-spacing:2px;color:#555;text-transform:uppercase;margin-bottom:6px;";
+    nm.textContent = st.name;
+    col.appendChild(nm);
+
+    // ruler
+    const ruler = document.createElement("div");
+    ruler.style.cssText = `position:relative;width:80px;height:${RULER_H}px;`;
+
+    const topPx = dbu2px(st.top);
+    const botPx = dbu2px(st.bot);
+    const barH  = Math.max(2, botPx - topPx);
+
+    // dark bg
+    const bg = document.createElement("div");
+    bg.style.cssText = `position:absolute;left:14px;right:14px;top:${topPx}px;height:${barH}px;
+      background:#1a1a22;border:1px solid #2a2a35;border-radius:3px;`;
+    ruler.appendChild(bg);
+
+    if (st.splitDb != null) {
+      const splitPx   = dbu2px(st.splitDb);
+      const usefulBotPx = st.usefulBot !== undefined ? dbu2px(st.usefulBot) : botPx;
+
+      // ── Zone 1: OVERLOAD — above adMax (signal exceeds AD ceiling) ──
+      if (st.splitDb > st.top) {
+        // splitPx is above topPx (higher dBu = higher on canvas = smaller px)
+        const clampedSplitPx = Math.max(0, splitPx);
+        const overH = Math.max(0, topPx - clampedSplitPx);
+        if (overH > 1) {
+          const ov = document.createElement("div");
+          ov.style.cssText = `position:absolute;left:14px;right:14px;
+            top:${clampedSplitPx}px;height:${overH}px;
+            background:${st.color};opacity:0.18;border-radius:3px 3px 0 0;`;
+          ruler.appendChild(ov);
+        }
+      }
+
+      // ── Zone 2: HEADROOM — from bar top to min(splitPx, topPx) ──
+      const effectiveSplitPx = Math.max(topPx, splitPx); // clamp split to inside bar
+      const hdH = Math.max(0, effectiveSplitPx - topPx);
+      if (hdH > 1) {
+        const hd = document.createElement("div");
+        hd.style.cssText = `position:absolute;left:14px;right:14px;top:${topPx}px;height:${hdH}px;
+          background:${st.headroomColor||"#1a2a1a"};border-radius:3px 3px 0 0;`;
+        ruler.appendChild(hd);
+      }
+
+      // ── Zone 3: ACTIVE SIGNAL — from split down to usefulBot ──
+      const activeTop = effectiveSplitPx;
+      const activeBot = Math.min(usefulBotPx, botPx);
+      const sigH = Math.max(0, activeBot - activeTop);
+      if (sigH > 1) {
+        const sg = document.createElement("div");
+        sg.style.cssText = `position:absolute;left:14px;right:14px;
+          top:${activeTop}px;height:${sigH}px;
+          background:${st.color};opacity:0.9;`;
+        ruler.appendChild(sg);
+      }
+
+      // ── Zone 4: DEAD ZONE — from usefulBot to bar bottom (pre noise below AD floor) ──
+      const deadTop = Math.min(usefulBotPx, botPx);
+      const deadH   = Math.max(0, botPx - deadTop);
+      if (deadH > 1) {
+        const dz = document.createElement("div");
+        dz.style.cssText = `position:absolute;left:14px;right:14px;
+          top:${deadTop}px;height:${deadH}px;
+          background:${st.color};opacity:0.18;border-radius:0 0 3px 3px;`;
+        ruler.appendChild(dz);
+      }
+
+      // split line (signal level)
+      const sl = document.createElement("div");
+      sl.style.cssText = `position:absolute;left:10px;right:10px;top:${effectiveSplitPx}px;height:2px;
+        background:${st.splitColor||"#ffffff88"};border-radius:1px;`;
+      ruler.appendChild(sl);
+      // usefulBot line (pre noise floor, if inside bar)
+      if (usefulBotPx > topPx && usefulBotPx < botPx) {
+        const ul = document.createElement("div");
+        ul.style.cssText = `position:absolute;left:10px;right:10px;top:${usefulBotPx}px;height:1px;
+          background:${st.color};opacity:0.4;`;
+        ruler.appendChild(ul);
+      }
+      // split label
+      addLabel(ruler, effectiveSplitPx, st.splitLabel, "right", outMatchTop ? "#00ffff" : "#aaa");
+    } else {
+      // Solid bar — with optional useful-range darkening
+      if (st.usefulTop !== undefined) {
+        // Three zones: above useful (dark), useful (color), below useful (dark)
+        const uTopPx = Math.max(topPx, dbu2px(st.usefulTop));
+        const uBotPx = Math.min(botPx, dbu2px(st.usefulBot));
+
+        // Above useful range (dark)
+        const aboveH = Math.max(0, uTopPx - topPx);
+        if (aboveH > 1) {
+          const ab = document.createElement("div");
+          ab.style.cssText = `position:absolute;left:14px;right:14px;top:${topPx}px;height:${aboveH}px;
+            background:${st.color};opacity:0.18;border-radius:3px 3px 0 0;`;
+          ruler.appendChild(ab);
+        }
+        // Useful range (full color)
+        const usefulH = Math.max(0, uBotPx - uTopPx);
+        if (usefulH > 1) {
+          const us = document.createElement("div");
+          us.style.cssText = `position:absolute;left:14px;right:14px;top:${uTopPx}px;height:${usefulH}px;
+            background:${st.color};opacity:0.88;`;
+          ruler.appendChild(us);
+        }
+        // Below useful range (dark)
+        const belowH = Math.max(0, botPx - uBotPx);
+        if (belowH > 1) {
+          const bl = document.createElement("div");
+          bl.style.cssText = `position:absolute;left:14px;right:14px;top:${uBotPx}px;height:${belowH}px;
+            background:${st.color};opacity:0.18;border-radius:0 0 3px 3px;`;
+          ruler.appendChild(bl);
+        }
+      } else {
+        // No useful range defined — plain solid bar
+        const sb = document.createElement("div");
+        sb.style.cssText = `position:absolute;left:14px;right:14px;top:${topPx}px;height:${barH}px;
+          background:${st.color};border-radius:3px;opacity:0.85;`;
+        ruler.appendChild(sb);
+      }
+    }
+
+    // extra reference lines
+    (st.extraLines || []).forEach(line => {
+      const px = dbu2px(line.db);
+      if (px < 0 || px > RULER_H) return;
+      const el = document.createElement("div");
+      el.style.cssText = `position:absolute;left:0;right:0;top:${px}px;height:1px;
+        border-top:1px dashed ${line.color};`;
+      ruler.appendChild(el);
+      const lb = document.createElement("div");
+      lb.style.cssText = `position:absolute;left:82px;top:${px-8}px;
+        font-size:8px;color:${line.color};white-space:nowrap;`;
+      lb.textContent = line.label;
+      ruler.appendChild(lb);
+    });
+
+    // top/bot labels
+    addLabel(ruler, topPx, st.topLabel, "left", "#888");
+    addLabel(ruler, botPx, st.botLabel, "left", "#888");
+
+    // ── Effective DR bracket removed — shown as text below bar ──
+
+    col.appendChild(ruler);
+
+    // DR badge: total DR on top line, effective DR on second line (if present)
+    const badge = document.createElement("div");
+    badge.style.cssText = "font-size:9px;color:#555;text-align:center;line-height:1.6;margin-top:6px;min-width:90px;";
+    const drVal = st.top - st.bot;
+    let badgeHTML = `<span style="color:#999;font-size:11px;">${fmtN(drVal)}</span> <span style="color:#444;">dB DR</span>`;
+    if (st.effDR) {
+      const effVal = st.effDR.value;
+      const effColor = st.effDR.color;
+      badgeHTML += `<br><span style="color:${effColor};font-size:12px;font-weight:bold;">${fmtN(effVal)}</span> <span style="color:${effColor};opacity:0.7;">dB Eff.</span>`;
+    }
+    badge.innerHTML = badgeHTML;
+    col.appendChild(badge);
+
+    container.appendChild(col);
+  });
+}
+
+function addLabel(parent, px, text, side, color) {
+  const lbl = document.createElement("div");
+  lbl.style.cssText = `
+    position:absolute;
+    ${side === "left" ? "right:82px" : "left:82px"};
+    top:${px - 7}px;
+    font-size:9px;color:${color||"#888"};
+    white-space:nowrap;font-family:'Courier New',monospace;
+  `;
+  lbl.textContent = text;
+  parent.appendChild(lbl);
+
+  const tick = document.createElement("div");
+  tick.style.cssText = `
+    position:absolute;
+    ${side === "left" ? "left:10px;right:14px" : "left:14px;right:10px"};
+    top:${px}px;height:1px;background:#3a3a45;
+  `;
+  parent.appendChild(tick);
+}
+
+
+/* ══════════════════════════════════════════════════
+   MAIN
+══════════════════════════════════════════════════ */
+let currentGain = 10;
+let currentOut  = 0;  // relative dB offset from preMaxOut (0 = full, -34 = min)
+
+function update() {
+  const r = calcAll(currentGain, currentOut);
+  updateReadouts(r);
+  renderDRBars(r);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  // ── GAIN KNOB ──
+  const gainKnob = makeKnob("knob-gain", {
+    min: 10, max: 63, init: 10,
+    color: "#4fc3c3", indicatorColor: "#ffcc00",
+    onChange: v => {
+      currentGain = v;
+      document.getElementById("gain-readout").textContent = "+" + v.toFixed(1) + " dB";
+      update();
+    }
+  });
+
+  // Gain range inputs → update knob range live
+  function syncGainRange() {
+    const mn = parseFloat(document.getElementById("gain-min").value);
+    const mx = parseFloat(document.getElementById("gain-max").value);
+    if (isNaN(mn) || isNaN(mx) || mn >= mx) return;
+    gainKnob.setRange(mn, mx);
+    currentGain = gainKnob.getValue();
+    document.getElementById("gain-readout").textContent = "+" + currentGain.toFixed(1) + " dB";
+    update();
+  }
+  document.getElementById("gain-min").addEventListener("input",  syncGainRange);
+  document.getElementById("gain-max").addEventListener("input",  syncGainRange);
+  document.getElementById("gain-min").addEventListener("change", syncGainRange);
+  document.getElementById("gain-max").addEventListener("change", syncGainRange);
+
+  // ── OUTPUT KNOB ──
+  const initOutMin = parseFloat(document.getElementById("out-min").value) || -26;
+  const initOutMax = parseFloat(document.getElementById("out-max").value) || 6;
+  currentOut = initOutMax;
+
+  const outKnob = makeKnob("knob-out", {
+    min: initOutMin, max: initOutMax, init: initOutMax,
+    color: "#ffaa44", indicatorColor: "#ffcc00",
+    onChange: v => {
+      currentOut = v;
+      document.getElementById("out-readout").textContent = fmt(v) + " dB";
+      update();
+    }
+  });
+  document.getElementById("out-readout").textContent = fmt(currentOut) + " dB";
+
+  // Output min/max range inputs → update knob range live
+  function syncOutRange() {
+    const mn = parseFloat(document.getElementById("out-min").value);
+    const mx = parseFloat(document.getElementById("out-max").value);
+    if (isNaN(mn) || isNaN(mx) || mn >= mx) return;
+    outKnob.setRange(mn, mx);
+    currentOut = outKnob.getValue();
+    document.getElementById("out-readout").textContent = fmt(currentOut) + " dB";
+    update();
+  }
+  document.getElementById("out-min").addEventListener("input",  syncOutRange);
+  document.getElementById("out-min").addEventListener("change", syncOutRange);
+  document.getElementById("out-max").addEventListener("input",  syncOutRange);
+  document.getElementById("out-max").addEventListener("change", syncOutRange);
+
+  // ── Sensitivity 3-way correlation: dBV ↔ dBu ↔ mV ──
+  const sensDbv = document.getElementById("p-micSensDbv");
+  const sensDbu = document.getElementById("p-micSensDbu");
+  const sensMv  = document.getElementById("p-micSensMv");
+
+  function syncSensFromDbv() {
+    const dbv = parseFloat(sensDbv.value);
+    if (isNaN(dbv)) return;
+    sensDbu.value = (dbv + 2.21).toFixed(2);
+    sensMv.value  = (1000 * Math.pow(10, dbv / 20)).toFixed(3);
+    update();
+  }
+  function syncSensFromDbu() {
+    const dbu = parseFloat(sensDbu.value);
+    if (isNaN(dbu)) return;
+    const dbv = dbu - 2.21;
+    sensDbv.value = dbv.toFixed(2);
+    sensMv.value  = (1000 * Math.pow(10, dbv / 20)).toFixed(3);
+    update();
+  }
+  function syncSensFromMv() {
+    const mv = parseFloat(sensMv.value);
+    if (isNaN(mv) || mv <= 0) return;
+    const dbv = 20 * Math.log10(mv / 1000);
+    sensDbv.value = dbv.toFixed(2);
+    sensDbu.value = (dbv + 2.21).toFixed(2);
+    update();
+  }
+
+  sensDbv.addEventListener("input",  syncSensFromDbv);
+  sensDbv.addEventListener("change", syncSensFromDbv);
+  sensDbu.addEventListener("input",  syncSensFromDbu);
+  sensDbu.addEventListener("change", syncSensFromDbu);
+  sensMv.addEventListener("input",   syncSensFromMv);
+  sensMv.addEventListener("change",  syncSensFromMv);
+
+  // init all three from default dBV value
+  syncSensFromDbv();
+  const preDRinput    = document.getElementById("p-preDR");
+  const preNoiseInput = document.getElementById("p-preNoise");
+  const preMaxOutInput = document.getElementById("p-preMaxOut");
+
+  function syncPreDR() {
+    const maxOut = parseFloat(preMaxOutInput.value) || 17;
+    const dr     = parseFloat(preDRinput.value);
+    if (!isNaN(dr)) {
+      preNoiseInput.value = (maxOut - dr).toFixed(1);
+    }
+    update();
+  }
+  function syncPreNoise() {
+    const maxOut = parseFloat(preMaxOutInput.value) || 17;
+    const noise  = parseFloat(preNoiseInput.value);
+    if (!isNaN(noise)) {
+      preDRinput.value = (maxOut - noise).toFixed(1);
+    }
+    update();
+  }
+  function syncPreMaxOut() {
+    // When max out changes, keep DR fixed → update noise
+    const maxOut = parseFloat(preMaxOutInput.value) || 17;
+    const dr     = parseFloat(preDRinput.value);
+    if (!isNaN(dr)) {
+      preNoiseInput.value = (maxOut - dr).toFixed(1);
+    }
+    update();
+  }
+
+  preDRinput.addEventListener("input",    syncPreDR);
+  preDRinput.addEventListener("change",   syncPreDR);
+  preNoiseInput.addEventListener("input",  syncPreNoise);
+  preNoiseInput.addEventListener("change", syncPreNoise);
+  preMaxOutInput.addEventListener("input",  syncPreMaxOut);
+  preMaxOutInput.addEventListener("change", syncPreMaxOut);
+
+  // All other param inputs (excluding correlated ones handled above)
+  document.querySelectorAll(".param-input, #p-bits").forEach(el => {
+    const skip = ["p-preDR","p-preNoise","p-preMaxOut","p-micSensDbv","p-micSensDbu","p-micSensMv","p-preMaxIn"];
+    if (skip.includes(el.id)) return;
+    el.addEventListener("change", update);
+    el.addEventListener("input",  update);
+  });
+  // p-preMaxIn needs update too
+  document.getElementById("p-preMaxIn").addEventListener("input",  update);
+  document.getElementById("p-preMaxIn").addEventListener("change", update);
+
+  // init Pre Noise display to match default DR
+  syncPreDR();
+
+  update();
 });
 </script>
-
 </body>
 </html>
