@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>TrebGainStation</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,6 +15,7 @@ body {
   overflow-x: hidden;
 }
 
+/* ── HEADER ── */
 .header {
   background: #111115;
   border-bottom: 1px solid #2a2a35;
@@ -21,11 +23,13 @@ body {
   display: flex;
   align-items: baseline;
   gap: 16px;
+  flex-wrap: wrap;
 }
 .header h1 { font-size: 22px; font-weight: bold; letter-spacing: 6px; color: #4fc3c3; text-transform: uppercase; }
 .header .tagline { font-size: 10px; letter-spacing: 2px; color: #555; }
 .header .credits { margin-left: auto; font-size: 9px; color: #333; letter-spacing: 1px; }
 
+/* ── MAIN LAYOUT ── */
 .main-layout {
   display: grid;
   grid-template-columns: 260px 1fr 260px;
@@ -33,6 +37,7 @@ body {
   gap: 0;
 }
 
+/* ── PARAMS PANEL ── */
 .params-panel {
   background: #14141a;
   border-right: 1px solid #2a2a35;
@@ -46,6 +51,13 @@ body {
   font-size: 9px; letter-spacing: 2px; color: #4fc3c3;
   text-transform: uppercase; border-bottom: 1px solid #2a2a35;
   padding-bottom: 4px; margin-bottom: 8px;
+  /* mobile: make tappable as accordion header */
+  cursor: default;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.param-section-title .toggle-icon {
+  display: none; /* hidden on desktop */
+  font-size: 10px; color: #444;
 }
 
 .param-row {
@@ -74,6 +86,7 @@ body {
 }
 .param-input:focus { outline: none; border-color: #4fc3c3; }
 
+/* ── PREAMP FACE ── */
 .preamp-face {
   background: #1c1c22;
   border-top: 3px solid #3a3a45;
@@ -90,6 +103,7 @@ body {
 .brand-label { font-size: 11px; letter-spacing: 3px; color: #4fc3c3; text-transform: uppercase; }
 .model-label { font-size: 9px; color: #333; letter-spacing: 2px; }
 
+/* ── KNOBS ── */
 .knobs-row {
   display: flex; gap: 40px;
   align-items: flex-start; justify-content: center; width: 100%;
@@ -172,6 +186,7 @@ canvas.knob-canvas { display: none; }
 .legend {
   display: flex; justify-content: center; gap: 24px;
   padding-top: 8px; border-top: 1px solid #2a2a35;
+  flex-wrap: wrap;
 }
 .legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #666; }
 .legend-swatch { width: 14px; height: 14px; border-radius: 2px; }
@@ -180,7 +195,7 @@ canvas.knob-canvas { display: none; }
 .col-preout{ background: #3a5fbf; }
 .col-adda  { background: #8855cc; }
 
-/* range input pair */
+/* ── RANGE PAIR ── */
 .range-pair {
   display: flex; gap: 8px; margin-top: 4px;
 }
@@ -194,6 +209,88 @@ canvas.knob-canvas { display: none; }
   padding: 2px; font-family: monospace; border-radius: 2px;
 }
 .range-pair input:focus { outline: none; border-color: #4fc3c3; color: #ccc; }
+
+/* ════════════════════════════════════════════════
+   TABLET — ≤ 900px: collapse side panels below face
+════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  /* Order: face first, then left params, then right params, then DR */
+  .preamp-face  { order: 1; border-top: none; border-bottom: none;
+                  border: 1px solid #2a2a35; }
+  .params-panel          { order: 2; border-right: none; border-top: 1px solid #2a2a35; }
+  .params-panel.right    { order: 3; border-left: none;  border-top: 1px solid #2a2a35; }
+  .dr-section            { order: 4; grid-column: 1; }
+
+  /* Two-column params grid on tablet */
+  .params-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+    padding: 14px 16px;
+  }
+  .params-panel .param-section { break-inside: avoid; }
+}
+
+/* ════════════════════════════════════════════════
+   MOBILE — ≤ 600px
+════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .header { padding: 10px 16px; gap: 8px; }
+  .header h1 { font-size: 16px; letter-spacing: 3px; }
+  .header .tagline { font-size: 9px; display: none; }
+
+  /* Single column params */
+  .params-panel { grid-template-columns: 1fr; padding: 12px 14px; }
+
+  /* Accordion sections — collapsed by default on mobile */
+  .param-section-title { cursor: pointer; }
+  .param-section-title .toggle-icon { display: inline; }
+  .param-section-body { overflow: hidden; transition: max-height 0.25s ease; }
+  .param-section-body.collapsed { max-height: 0 !important; }
+
+  /* Knobs: slightly smaller */
+  .fknob-wrap { width: 86px; height: 86px; }
+  .fknob-sprite { height: 86px; }
+  .knobs-row { gap: 24px; }
+  .knob-readout { font-size: 12px; min-width: 76px; }
+
+  /* Touch-friendly inputs */
+  .param-input { width: 70px; font-size: 13px; padding: 5px 6px; }
+  .param-value { min-width: 70px; font-size: 12px; padding: 4px 6px; }
+  .range-pair input { width: 52px; font-size: 12px; padding: 4px; }
+
+  /* Face mini readouts: 2 columns instead of 4 */
+  .face-readouts-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Meters */
+  .dbfs-label { width: 50px; font-size: 8px; }
+  .dbfs-value { min-width: 58px; font-size: 10px; }
+
+  /* DR bars: reduce gap and height */
+  .dr-bars-row { gap: 28px; min-height: 260px; overflow-x: auto; padding-bottom: 8px; }
+  .dr-section { padding: 14px 12px; }
+
+  /* Explanation box */
+  .gain-explain { font-size: 9px; padding: 10px 12px; max-width: 100%; }
+}
+
+/* ════════════════════════════════════════════════
+   SMALL MOBILE — ≤ 380px
+════════════════════════════════════════════════ */
+@media (max-width: 380px) {
+  .fknob-wrap { width: 76px; height: 76px; }
+  .fknob-sprite { height: 76px; }
+  .knobs-row { gap: 16px; }
+  .header h1 { font-size: 14px; letter-spacing: 2px; }
+  .dr-bars-row { gap: 18px; }
+}
 </style>
 </head>
 <body>
@@ -339,7 +436,7 @@ canvas.knob-canvas { display: none; }
     </div>
 
     <!-- face mini readouts -->
-    <div style="width:100%;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;">
+    <div class="face-readouts-grid" style="width:100%;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;">
       <div style="background:#111;border:1px solid #2a2a35;border-radius:2px;padding:6px 8px;text-align:center;">
         <div style="font-size:8px;color:#444;letter-spacing:1px;text-transform:uppercase;">Pre Max In</div>
         <div style="font-size:13px;color:#60aaff;font-family:monospace;" id="face-preIn">—</div>
@@ -672,8 +769,8 @@ function calcAll(gainDb, outDb) {
   const adInputDBFS = outSignalDBu - p.adMax;
   const headroom    = p.adMax - outSignalDBu;
 
-  // Match detection — tolerance ±0.3 dB
-  const TOL = 0.3;
+  // Match detection — tolerance ±0.1 dB
+  const TOL = 0.1;
   const outMatchesAdMax    = Math.abs(outSignalDBu - p.adMax) <= TOL;
   const preMinMatchesAdMin = Math.abs(preMinOut - adMinDBu) <= TOL;
 
@@ -1275,6 +1372,59 @@ document.addEventListener("DOMContentLoaded", () => {
   syncPreDR();
 
   update();
+
+  // ── MOBILE ACCORDION ──
+  // Wrap each param-section's rows in a .param-section-body div
+  // and add toggle icons to section titles
+  function initAccordion() {
+    if (window.innerWidth > 600) return;
+
+    document.querySelectorAll('.param-section').forEach((section, idx) => {
+      const title = section.querySelector('.param-section-title');
+      if (!title || title.querySelector('.toggle-icon')) return;
+
+      // Add toggle icon
+      const icon = document.createElement('span');
+      icon.className = 'toggle-icon';
+      icon.textContent = '▾';
+      title.appendChild(icon);
+
+      // Wrap remaining children in a body div
+      const body = document.createElement('div');
+      body.className = 'param-section-body';
+      const children = [...section.children].filter(c => c !== title);
+      children.forEach(c => body.appendChild(c));
+      section.appendChild(body);
+
+      // First two sections open, rest collapsed
+      if (idx >= 2) {
+        body.classList.add('collapsed');
+        body.style.maxHeight = '0px';
+        icon.textContent = '▸';
+      } else {
+        body.style.maxHeight = body.scrollHeight + 'px';
+      }
+
+      title.addEventListener('click', () => {
+        const isOpen = !body.classList.contains('collapsed');
+        if (isOpen) {
+          body.style.maxHeight = body.scrollHeight + 'px';
+          requestAnimationFrame(() => {
+            body.style.maxHeight = '0px';
+            body.classList.add('collapsed');
+            icon.textContent = '▸';
+          });
+        } else {
+          body.classList.remove('collapsed');
+          body.style.maxHeight = body.scrollHeight + 'px';
+          icon.textContent = '▾';
+        }
+      });
+    });
+  }
+
+  // Run accordion init after a short delay so DOM is fully rendered
+  setTimeout(initAccordion, 100);
 });
 </script>
 </body>
